@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  hashedPassword String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts    Account[]
+  investments Investment[]
+  plannings   MonthlyPlan[]
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  name      String
+  category  String   // bank, brokerage, crypto, savings, credit_card, loan, other
+  balance   Float    @default(0)
+  currency  String   @default("GBP")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  balanceHistory BalanceHistory[]
+}
+
+model BalanceHistory {
+  id        String   @id @default(cuid())
+  balance   Float
+  date      DateTime @default(now())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Investment {
+  id             String   @id @default(cuid())
+  name           String
+  ticker         String?
+  type           String   // stock, crypto, etf, bond, property, other
+  investedAmount Float
+  currentValue   Float
+  units          Float?
+  currency       String   @default("GBP")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MonthlyPlan {
+  id              String   @id @default(cuid())
+  month           Int
+  year            Int
+  income          Float    @default(0)
+  fixedExpenses   Float    @default(0)
+  variableExpenses Float   @default(0)
+  savingsGoal     Float    @default(0)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+}
